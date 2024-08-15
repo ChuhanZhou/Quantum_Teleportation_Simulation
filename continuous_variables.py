@@ -1,22 +1,23 @@
-from qutip import about, basis, destroy, mcsolve, mesolve
+#from qutip import about, basis, destroy, mcsolve, mesolve
 import math
 from scipy.special import genlaguerre
 import density_matrix as density_matrix
 
 import numpy as np
 
+N = 20
+
 def get_quantum_state(alpha=[0,0],density_matrix=[]):
     alpha = alpha[0]+alpha[1]*1j
 
-def get_fock_basic(n,N=-1):
-    N = max(n+1,N)
+def get_fock_basic(n):
     basic_n = np.zeros((N+1,1))
     basic_n[n,0] = 1
     return basic_n
 
 def get_matrix_element(m,n,rho):
-    state_m = get_fock_basic(m,rho.shape[1]-1)
-    state_n = get_fock_basic(n,rho.shape[0]-1)
+    state_m = get_fock_basic(m)
+    state_n = get_fock_basic(n)
     rho = density_matrix.plus([np.zeros((state_m.shape[0],state_n.shape[0])),rho])
     rho_mn = np.dot(np.dot(state_m.T,rho),state_n)
     return rho_mn
