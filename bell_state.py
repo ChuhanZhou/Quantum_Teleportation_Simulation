@@ -33,13 +33,11 @@ def unitary_operation(qubit_matrix,qubit_a_i=0,state="00",bell_state_o="00"):
         plan = [["Z", [qubit_a_i]],["X", [qubit_a_i]]]
     return circuits.Circuit(qubit_n, plan).run(qubit_matrix)
 
-def teleportation(state_c=0,state_ab=[0,0]):
-    qubit_c = qubits.get_qubit_matrix([state_c])
-    qubits_ab = qubits.get_qubit_matrix(state_ab)
+def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00"):
+    qubits_ab = qubits.get_qubit_matrix([s for s in state_ab])
     # create bell state
     bell_ab = entangler(qubits_ab, 0, 1)
     qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
     qubits_bell_ca_b = measurement(qubits_c_bell_ab, 0, 1)
     measurement_ca, qubit_b = qubits.measurement(qubits_bell_ca_b, [0, 1])
-    qubit_b = unitary_operation(qubit_b, 0, measurement_ca,"".join([str(s) for s in state_ab]))
     return qubit_b,measurement_ca
