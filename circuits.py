@@ -3,9 +3,7 @@ import gates
 import qubits
 from matplotlib import pyplot as plt
 import datetime
-import math
-from concurrent.futures import ThreadPoolExecutor,wait, ALL_COMPLETED
-from multiprocessing import Pool,Queue,Manager,Process
+from multiprocessing import Manager,Process
 
 class  Circuit():
     def __init__(self,input_n=0,gate_plan = []):
