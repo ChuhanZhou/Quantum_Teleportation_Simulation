@@ -1,6 +1,7 @@
 import qubits
 import circuits
 import math
+import noises
 
 def entangler(qubit_matrix,qubit_a_i=0,qubit_b_i=1):
     qubit_n = int(math.log2(qubit_matrix.shape[0]))
@@ -8,7 +9,7 @@ def entangler(qubit_matrix,qubit_a_i=0,qubit_b_i=1):
     creator = circuits.Circuit(qubit_n, plan)
     return creator.run(qubit_matrix)
 
-def measurement(qubit_matrix,qubit_a_i=0,qubit_b_i=1):
+def bell_measurement(qubit_matrix,qubit_a_i=0,qubit_b_i=1):
     qubit_n = int(math.log2(qubit_matrix.shape[0]))
     plan = [["CNOT", [qubit_a_i, qubit_b_i]], ["H", [qubit_a_i]]]
     decoder = circuits.Circuit(qubit_n, plan)
@@ -33,11 +34,13 @@ def unitary_operation(qubit_matrix,qubit_a_i=0,state="00",bell_state_o="00"):
         plan = [["Z", [qubit_a_i]],["X", [qubit_a_i]]]
     return circuits.Circuit(qubit_n, plan).run(qubit_matrix)
 
-def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00"):
+def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00",noise_gamma=[0.0]):
     qubits_ab = qubits.get_qubit_matrix([s for s in state_ab])
     # create bell state
     bell_ab = entangler(qubits_ab, 0, 1)
+    #a = qubits.get_density_matrix(bell_ab)
+    #bell_ab = noises.dephasing(noises.dephasing(bell_ab,0,noise_gamma[0]),1,noise_gamma[0])
     qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
-    qubits_bell_ca_b = measurement(qubits_c_bell_ab, 0, 1)
+    qubits_bell_ca_b = bell_measurement(qubits_c_bell_ab, 0, 1)
     measurement_ca, qubit_b = qubits.measurement(qubits_bell_ca_b, [0, 1])
     return qubit_b,measurement_ca

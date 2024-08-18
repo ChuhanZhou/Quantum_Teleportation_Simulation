@@ -33,6 +33,10 @@ def get_basic_qubit_0():# ∣0⟩
 def get_basic_qubit_1():# ∣1⟩
     return np.array([[0], [1]])
 
+def get_fidelity (qubit_0,qubit_1):
+    f = abs(np.dot(qubit_0.T, qubit_1)) ** 2
+    return f[0, 0]
+
 def normalization(qubit_matrix):
     """
     normalization=> <ψ|ψ>=1
@@ -60,7 +64,7 @@ def measurement(qubit_matrix,measurement_list=[]):
         part_prob = qubit_matrix[o_i,0]
         if decode_measure in options_probabilities.keys():
             matrix_part_prob.get(decode_measure).update({decode_other:part_prob})
-            options_probabilities.update({decode_measure:options_probabilities.get(decode_measure)+abs(part_prob)})
+            options_probabilities.update({decode_measure:options_probabilities.get(decode_measure)+abs(part_prob)**2})
         else:
             matrix_part_prob.update({decode_measure:{decode_other:part_prob}})
             options_probabilities.update({decode_measure:abs(part_prob)})
@@ -77,6 +81,24 @@ def measurement(qubit_matrix,measurement_list=[]):
         other_matrix[i,0] = other_prob.get(decode)
     other_matrix = qubits.normalization(other_matrix)
     return result,other_matrix
+
+# rho:ρ
+def get_density_matrix(qubit_matrix):
+    rho = np.dot(qubit_matrix, qubit_matrix.T)
+    return rho
+
+def slice_density_matrix(density_matrix):
+    qubit_num = int(math.log2(density_matrix.shape[0]))
+    density_matrix_list = []
+    density_matrix = density_matrix.reshape((np.ones((qubit_num*2)) * 2).astype("int").tolist())
+    for i in range(qubit_num):
+        part_density_matrix = density_matrix
+        qubit_n = qubit_num
+        for p_i in sorted(set(range(qubit_num)) - set([i]), reverse=True):
+            part_density_matrix = np.trace(part_density_matrix, axis1=p_i, axis2=p_i + qubit_n)
+            qubit_n-=1
+        density_matrix_list.append(part_density_matrix)
+    return density_matrix_list
 
 def decode_qubits(qubits = np.array([])):
     qubit_num = int(math.log2(qubits.shape[0]))

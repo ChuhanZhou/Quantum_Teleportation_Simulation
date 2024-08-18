@@ -113,8 +113,8 @@ def rcs(input_n = 3,gate_n = 15,batch_n = 1000):
         result_0 = circuit_0.run(input_matrix)
         result_1 = circuit_1.run(input_matrix)
         # fidelity
-        f = abs(np.dot(result_0.T, result_1)) ** 2
-        f_list.append(f[0, 0])
+        f = qubits.get_fidelity(result_0,result_1)
+        f_list.append(f)
         if (f_i + 1) % (batch_n / 10) == 0:
             print("[{}] {}|{}".format(datetime.datetime.now(),batch_n, f_i + 1))
     end_time = datetime.datetime.now()
@@ -171,8 +171,8 @@ def get_fidelities (loop_n,basic_qubit_list,batch_n,gate_n,f_q,p_q,safe_print=Fa
         result_0 = circuit_0.run(input_matrix)
         result_1 = circuit_1.run(input_matrix)
         # fidelity
-        f = abs(np.dot(result_0.T, result_1)) ** 2
-        f_q.put(f[0, 0])
+        f = qubits.get_fidelity(result_0,result_1)
+        f_q.put(f)
         finish_n = f_q.qsize()
         if finish_n % (batch_n / 10) == 0:
             info = "[{}] {}|{}".format(datetime.datetime.now(), batch_n, finish_n)
