@@ -16,8 +16,22 @@ class  Circuit():
         self.circuit_matrix = self.create_circuit_matrix(self.blue_print, self.gate_list)
 
     def run(self,qubit_matrix):
+        if qubit_matrix.shape[0] == qubit_matrix.shape[1]:
+            return self.run_density_matrix(qubit_matrix)
+        else:
+            return self.run_state_vector(qubit_matrix)
+
+    def run_state_vector(self,qubit_matrix):
+        # v=U*v
         out = np.dot(self.circuit_matrix,qubit_matrix)
         #normalization => <ψ|ψ>=1
+        out = qubits.normalization(out)
+        return out
+
+    def run_density_matrix(self,qubit_matrix):
+        # ρ′=U*ρ*U.T
+        out = np.dot(np.dot(self.circuit_matrix, qubit_matrix), self.circuit_matrix.T)
+        # normalization => <ψ|ψ>=1
         out = qubits.normalization(out)
         return out
 

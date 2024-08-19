@@ -5,14 +5,20 @@ import circuits
 import qubits
 
 
-def dephasing_noise(qubit_matrix, i=0, gamma=0.0):
+def dephasing_noise(qubit_matrix, index_list=[], gamma=0.0):
     gamma = max(0,min(1,gamma))
     qubit_num = int(math.log2(qubit_matrix.shape[0]))
     rho = qubits.get_density_matrix(qubit_matrix)
-    Z = circuits.Circuit(qubit_num, [["Z", [i]]]).circuit_matrix
+    plan = []
+    for i in index_list:
+        plan.append(["Z",[i]])
+    Z = circuits.Circuit(qubit_num, plan).circuit_matrix
 
-    out_dm = (1 - gamma) * rho + gamma * np.dot(Z, np.dot(rho, Z))
-    return out_dm
+    out_dm = (1 - gamma) * rho + gamma * np.dot(np.dot(Z, rho), Z)
+    aa = (1 - gamma) * rho
+    ab = gamma * np.dot(np.dot(Z, rho), Z)
+    out = qubits.normalization(out_dm)
+    return out
 
 
 def density_matrix_to_amplitudes(rho):

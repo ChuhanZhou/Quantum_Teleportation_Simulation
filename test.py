@@ -50,16 +50,28 @@ def fidelity(rho, sigma):
 
 if __name__ == '__main__':
 
-
+    p = 1
     state_ab = "00"
     qubit_c = qubits.get_qubit_matrix([1])
+    density_c = qubits.get_density_matrix(qubit_c)
     qubits_ab = qubits.get_qubit_matrix([s for s in state_ab])
+
+    #density_cab = qubits.to_muti_qubit_matrix([density_c,density_ab])
     # create bell state
-    bell_ab = bell_state.entangler(qubits_ab, 0, 1)
-    qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
-    qubits_bell_ca_b = bell_state.bell_measurement(qubits_c_bell_ab, 0, 1)
-    rho_ABC = qubits.get_density_matrix(qubits_bell_ca_b)
+    density_bell_ab = bell_state.entangler(qubits.get_density_matrix(qubits_ab), 0, 1)
+    density_bell_ab_noise = noises.dephasing_noise(noises.dephasing_noise(density_bell_ab,[0],0.0),[1],1)
+    density_c_bell_ab = qubits.to_muti_qubit_matrix([density_c, density_bell_ab])
+
+    density_c_bell_ab_noise =  qubits.to_muti_qubit_matrix([density_c, density_bell_ab_noise])
+
+    density_bell_ca_b = bell_state.bell_measurement(density_c_bell_ab, 0, 1)
+    density_bell_ca_b_noise = bell_state.bell_measurement(density_c_bell_ab, 0, 1)
     ideal_phi = qubits.get_density_matrix(qubit_c)
+    measurement_ca, density_b = qubits.measurement(density_bell_ca_b,[0,1])
+    density_b = bell_state.unitary_operation(density_b, 0, measurement_ca, state_ab)
+    state_b = qubits.measurement(density_b, [0])[0]
+    print(1,state_b)
+    print(qubits.get_fidelity(density_b, density_c))
 
     # 分别施加不同强度的Dephasing噪声，并计算保真度
     for p in [0, 0.2, 0.5, 1.0]:

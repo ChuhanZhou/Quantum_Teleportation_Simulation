@@ -20,10 +20,9 @@ if __name__ == '__main__':
 
 
 
-    message = "Hello World!"
-    print("[Send]:{}".format(message))
-    message_encode = format(int(bytes(message, 'utf-8').hex(), base=16), 'b')
-    print("[Encode]:{}".format(message_encode))
+    message_encode = ""
+    for i in range(1000):
+        message_encode+="1"
 
     receive_buffer = ""
     for m in message_encode:
@@ -40,5 +39,3 @@ if __name__ == '__main__':
         #print("qubit_c(sender):{} | measurement_ca(send):{} | qubit_b(receiver):{}".format(m, state_ca, state_b))
 
     print("[Receive]:{}".format(receive_buffer))
-    message_decode = bytes.fromhex(format(int(receive_buffer, base=2), 'x')).decode('utf-8')
-    print("[Decode]:{} ({} binary bit)".format(message_decode, len(receive_buffer)))
