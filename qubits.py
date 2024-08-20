@@ -2,6 +2,7 @@ import math
 import random
 import numpy as np
 
+import gates
 import qubits
 
 
@@ -28,24 +29,41 @@ def to_muti_qubit_matrix(qubit_list=[]):
     return muti_qubit_matrix
 
 def get_basic_qubit_0():# ∣0⟩
-    return np.array([[1], [0]])
+    return np.array([[1.], [0.]])
 
 def get_basic_qubit_1():# ∣1⟩
-    return np.array([[0], [1]])
+    return np.array([[0.], [1.]])
 
-def get_fidelity (qubit_0,qubit_1):
-    a = np.dot(qubit_0.T, qubit_1)
-    f = abs(np.dot(qubit_0.T, qubit_1)) ** 2
+def get_fidelity(qubit_0,qubit_1):
+    if qubit_0.shape[0] == qubit_0.shape[1]:
+        return get_density_matrix_fidelity(qubit_0,qubit_1)
+    else:
+        return get_state_vector_fidelity(qubit_0,qubit_1)
+
+def get_state_vector_fidelity(qubit_0,qubit_1):
+    f = abs(qubit_0.T @ qubit_1) ** 2
     return f[0, 0]
+
+def get_density_matrix_fidelity(qubit_0,qubit_1):
+    f = np.trace(np.sqrt(qubit_0 @ qubit_1)) ** 2
+    return f
 
 def normalization(qubit_matrix):
     """
     normalization=> <ψ|ψ>=1
     """
-    #s = (np.abs(qubit_matrix) ** 2).sum()
-    #qubit_matrix_norm = qubit_matrix / np.sqrt(s)
+    if qubit_matrix.shape[0] == qubit_matrix.shape[1]:
+        return normalize_density_matrix(qubit_matrix)
+    else:
+        return normalize_state_vector(qubit_matrix)
 
-    qubit_matrix_norm = qubit_matrix/np.trace(qubit_matrix)
+def normalize_state_vector(qubit_matrix):
+    s = (np.abs(qubit_matrix) ** 2).sum()
+    qubit_matrix_norm = qubit_matrix / np.sqrt(s)
+    return qubit_matrix_norm
+
+def normalize_density_matrix(qubit_matrix):
+    qubit_matrix_norm = qubit_matrix / np.trace(qubit_matrix)
     return qubit_matrix_norm
 
 def measurement(qubit_matrix,measurement_list=[]):
@@ -70,25 +88,25 @@ def measurement_state_vector(qubit_matrix,measurement_list=[]):
                 decode_other += decode_all[i]
             else:
                 decode_measure += decode_all[i]
-        part_prob = qubit_matrix[o_i, 0]
+        part_prob = qubit_matrix[o_i, 0]**2#P(state) = state_vector**2
         if decode_measure in options_probabilities.keys():
             matrix_part_prob.get(decode_measure).update({decode_other: part_prob})
             options_probabilities.update(
-                {decode_measure: options_probabilities.get(decode_measure) + abs(part_prob) ** 2})
+                {decode_measure: options_probabilities.get(decode_measure) + part_prob})
         else:
             matrix_part_prob.update({decode_measure: {decode_other: part_prob}})
-            options_probabilities.update({decode_measure: abs(part_prob)})
+            options_probabilities.update({decode_measure: part_prob})
     options = list(options_probabilities.keys())
     probabilities = list(options_probabilities.values())
     result = random.choices(options, probabilities)[0]
 
-    # create matrix for qubits which is not measured
+    # create state vector for qubits which is not measured
     other_prob = matrix_part_prob.get(result)
     other_qubit_num = qubit_num - len(measurement_list)
     other_matrix = np.zeros((2 ** other_qubit_num, 1))
     for i in range(other_matrix.shape[0]):
         decode = bin(i).split("0b")[-1].zfill(other_qubit_num)
-        other_matrix[i, 0] = other_prob.get(decode)
+        other_matrix[i,0] = other_prob.get(decode)
     other_matrix = qubits.normalization(other_matrix)
     return result, other_matrix
 
@@ -106,7 +124,8 @@ def measurement_density_matrix(density_matrix,measurement_list=[]):
             else:
                 decode_measure += decode_all[i]
         state_target = get_qubit_matrix([s for s in decode_all])
-        part_prob = np.sum(state_target.T*density_matrix*state_target)
+
+        part_prob = np.sum(state_target.T*density_matrix*state_target)#P(state)=<state|*ρ*|state>
         if decode_measure in options_probabilities.keys():
             matrix_part_prob.get(decode_measure).update({decode_all: part_prob})
             options_probabilities.update(
@@ -118,20 +137,18 @@ def measurement_density_matrix(density_matrix,measurement_list=[]):
     probabilities = list(options_probabilities.values())
     result = random.choices(options, probabilities)[0]
 
-    # create matrix for qubits which is not measured
-    other_prob = matrix_part_prob.get(result)
-
-    other_matrix = 0
-    for state_i in other_prob.keys():
-        state_qubit = get_qubit_matrix([s for s in state_i])
-        state_prob = other_prob.get(state_i)
-        other_matrix += state_prob*np.dot(np.dot(state_qubit,state_qubit.T),density_matrix)
-
-    keep_list = []
+    # get density matrix for qubits which is not measured
+    gate_i = gates.get_gate_by_name("I")
+    qubit_m = 1
+    m_i=0
     for i in range(0, qubit_num):
         if i not in measurement_list:
-            keep_list.append(i)
-    other_matrix = slice_density_matrix(other_matrix,keep_list)
+            qubit_m = np.kron(qubit_m,gate_i)
+        else:
+            qubit_m = np.kron(qubit_m, qubits.get_basic(int(result[m_i])))
+            m_i+=1
+    other_matrix = qubit_m.T @ density_matrix @ qubit_m
+    other_matrix = qubits.normalization(other_matrix)
     return result, other_matrix
 
 # rho:ρ

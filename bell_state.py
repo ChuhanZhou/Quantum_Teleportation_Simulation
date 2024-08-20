@@ -36,10 +36,12 @@ def unitary_operation(qubit_matrix,qubit_a_i=0,state="00",bell_state_o="00"):
 
 def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00",noise_gamma=[0.0]):
     qubits_ab = qubits.get_qubit_matrix([s for s in state_ab])
+    if qubit_c.shape[0] == qubit_c.shape[1]:
+        qubits_ab = qubits.get_density_matrix(qubits_ab)
     # create bell state
     bell_ab = entangler(qubits_ab, 0, 1)
     #a = qubits.get_density_matrix(bell_ab)
-    #bell_ab = noises.dephasing(noises.dephasing(bell_ab,0,noise_gamma[0]),1,noise_gamma[0])
+    bell_ab = noises.dephasing_noise(bell_ab,[0,1],noise_gamma[0])
     qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
     qubits_bell_ca_b = bell_measurement(qubits_c_bell_ab, 0, 1)
     measurement_ca, qubit_b = qubits.measurement(qubits_bell_ca_b, [0, 1])

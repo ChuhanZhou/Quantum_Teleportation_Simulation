@@ -13,8 +13,8 @@ def dephasing_noise(qubit_matrix, index_list=[], gamma=0.0):
     for i in index_list:
         plan.append(["Z",[i]])
     Z = circuits.Circuit(qubit_num, plan).circuit_matrix
-
-    out_dm = (1 - gamma) * rho + gamma * np.dot(np.dot(Z, rho), Z)
+    #gate[I]
+    out_dm = ((1 + gamma) * rho + (1 - gamma) * Z @ rho @ Z)/2
     aa = (1 - gamma) * rho
     ab = gamma * np.dot(np.dot(Z, rho), Z)
     out = qubits.normalization(out_dm)
