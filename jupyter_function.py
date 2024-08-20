@@ -17,5 +17,6 @@ def multi_thread_measurement(index_test_n,message,i,qubit_b,decode_key,q):
         else:
             receive_message = 1
         result[t_n, 0] = receive_message
+        print(receive_message,decode_key,receive["1"],receive["0"])
     wrong_n = len(np.nonzero(result - answer)[0])
     q.put(wrong_n)

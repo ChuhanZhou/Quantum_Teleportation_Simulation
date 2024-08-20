@@ -4,6 +4,7 @@ import numpy as np
 
 import gates
 import qubits
+from scipy.linalg import sqrtm
 
 
 def get_basic(type=0):
@@ -35,7 +36,7 @@ def get_basic_qubit_1():# ∣1⟩
     return np.array([[0.], [1.]])
 
 def get_fidelity(qubit_0,qubit_1):
-    if qubit_0.shape[0] == qubit_0.shape[1]:
+    if qubit_0.shape[0] == qubit_0.shape[1] and qubit_0.shape[0] > 1:
         return get_density_matrix_fidelity(qubit_0,qubit_1)
     else:
         return get_state_vector_fidelity(qubit_0,qubit_1)
@@ -45,14 +46,15 @@ def get_state_vector_fidelity(qubit_0,qubit_1):
     return f[0, 0]
 
 def get_density_matrix_fidelity(qubit_0,qubit_1):
-    f = np.trace(np.sqrt(qubit_0 @ qubit_1)) ** 2
+    f = np.trace(sqrtm(sqrtm(qubit_0) @ qubit_1 @ sqrtm(qubit_0))) ** 2
+    f = float(f.real)
     return f
 
 def normalization(qubit_matrix):
     """
     normalization=> <ψ|ψ>=1
     """
-    if qubit_matrix.shape[0] == qubit_matrix.shape[1]:
+    if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
         return normalize_density_matrix(qubit_matrix)
     else:
         return normalize_state_vector(qubit_matrix)
@@ -70,14 +72,14 @@ def measurement(qubit_matrix,measurement_list=[]):
     '''
     measurement_list:[measurement_i_0,measurement_i_1,...]
     '''
-    if qubit_matrix.shape[0] == qubit_matrix.shape[1]:
+    if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
         return measurement_density_matrix(qubit_matrix,measurement_list)
     else:
         return measurement_state_vector(qubit_matrix,measurement_list)
 
 def measurement_state_vector(qubit_matrix,measurement_list=[]):
     qubit_num = int(math.log2(qubit_matrix.shape[0]))
-    matrix_part_prob = {}
+    matrix_part_vector = {}
     options_probabilities = {}
     for o_i in range(qubit_matrix.shape[0]):
         decode_all = bin(o_i).split("0b")[-1].zfill(qubit_num)  # from 2,3 to 010,011
@@ -88,20 +90,19 @@ def measurement_state_vector(qubit_matrix,measurement_list=[]):
                 decode_other += decode_all[i]
             else:
                 decode_measure += decode_all[i]
-        part_prob = qubit_matrix[o_i, 0]**2#P(state) = state_vector**2
+        part_vector = qubit_matrix[o_i, 0]
         if decode_measure in options_probabilities.keys():
-            matrix_part_prob.get(decode_measure).update({decode_other: part_prob})
-            options_probabilities.update(
-                {decode_measure: options_probabilities.get(decode_measure) + part_prob})
+            matrix_part_vector.get(decode_measure).update({decode_other: part_vector})
+            options_probabilities.update({decode_measure: options_probabilities.get(decode_measure) + abs(part_vector)})
         else:
-            matrix_part_prob.update({decode_measure: {decode_other: part_prob}})
-            options_probabilities.update({decode_measure: part_prob})
+            matrix_part_vector.update({decode_measure: {decode_other: part_vector}})
+            options_probabilities.update({decode_measure:abs(part_vector)})
     options = list(options_probabilities.keys())
     probabilities = list(options_probabilities.values())
     result = random.choices(options, probabilities)[0]
 
     # create state vector for qubits which is not measured
-    other_prob = matrix_part_prob.get(result)
+    other_prob = matrix_part_vector.get(result)
     other_qubit_num = qubit_num - len(measurement_list)
     other_matrix = np.zeros((2 ** other_qubit_num, 1))
     for i in range(other_matrix.shape[0]):

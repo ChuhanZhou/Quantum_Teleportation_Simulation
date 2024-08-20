@@ -34,14 +34,31 @@ def unitary_operation(qubit_matrix,qubit_a_i=0,state="00",bell_state_o="00"):
         plan = [["Z", [qubit_a_i]],["X", [qubit_a_i]]]
     return circuits.Circuit(qubit_n, plan).run(qubit_matrix)
 
-def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00",noise_gamma=[0.0]):
+def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00",noise_para=[0.0,0.0]):
+    if qubit_c.shape[0] == qubit_c.shape[1] and qubit_c.shape[0] > 1:
+        return density_matrix_teleportation(qubit_c,state_ab,noise_para)
+    else:
+        return state_vector_teleportation(qubit_c,state_ab)
+
+def state_vector_teleportation(qubit_c,state_ab):
     qubits_ab = qubits.get_qubit_matrix([s for s in state_ab])
-    if qubit_c.shape[0] == qubit_c.shape[1]:
-        qubits_ab = qubits.get_density_matrix(qubits_ab)
     # create bell state
     bell_ab = entangler(qubits_ab, 0, 1)
-    #a = qubits.get_density_matrix(bell_ab)
-    bell_ab = noises.dephasing_noise(bell_ab,[0,1],noise_gamma[0])
+    qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
+    qubits_bell_ca_b = bell_measurement(qubits_c_bell_ab, 0, 1)
+    measurement_ca, qubit_b = qubits.measurement(qubits_bell_ca_b, [0, 1])
+    return qubit_b, measurement_ca
+
+def density_matrix_teleportation(qubit_c,state_ab,noise_para):
+    '''
+    noise_para: [noise_intensity,noise_on_z-axis]
+        z-axis: z-axis of bloch sphere
+    '''
+    qubits_ab = qubits.get_density_matrix(qubits.get_qubit_matrix([s for s in state_ab]))
+    # create bell state
+    bell_ab = entangler(qubits_ab, 0, 1)
+    #add dephasing noise
+    bell_ab = noises.dephasing_noise(bell_ab,noise_para[0],noise_para[1])
     qubits_c_bell_ab = qubits.to_muti_qubit_matrix([qubit_c, bell_ab])
     qubits_bell_ca_b = bell_measurement(qubits_c_bell_ab, 0, 1)
     measurement_ca, qubit_b = qubits.measurement(qubits_bell_ca_b, [0, 1])

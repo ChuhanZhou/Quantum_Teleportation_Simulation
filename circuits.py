@@ -16,7 +16,7 @@ class  Circuit():
         self.circuit_matrix = self.create_circuit_matrix(self.blue_print, self.gate_list)
 
     def run(self,qubit_matrix):
-        if qubit_matrix.shape[0] == qubit_matrix.shape[1]:
+        if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
             return self.run_density_matrix(qubit_matrix)
         else:
             return self.run_state_vector(qubit_matrix)
