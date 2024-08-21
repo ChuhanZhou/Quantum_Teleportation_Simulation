@@ -33,59 +33,80 @@ def get_gate_by_name(name="", is_inverse=False,inner_gates=[]):
 
 
 def get_identity_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  I  ┃",
+                 "┗━━━━━┛"]
     identity_gate = np.array([
         [1, 0],
         [0, 1],
     ])
-    return identity_gate
+    return [identity_gate,print_str]
 
 
 def get_hadamard_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  H  ┃",
+                 "┗━━━━━┛"]
     hadamard_gate = np.array([
         [1, 1],
         [1, -1],
     ]) * pow(2, 1 / 2)
-    return hadamard_gate
+    return [hadamard_gate,print_str]
 
 
 def get_pauli_x_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  X  ┃",
+                 "┗━━━━━┛"]
     pauli_x_gate = np.array([
         [0, 1],
         [1, 0],
     ])
-    return pauli_x_gate
+    return [pauli_x_gate,print_str]
 
 
 def get_pauli_y_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  Y  ┃",
+                 "┗━━━━━┛"]
     pauli_y_gate = np.array([
         [0, -1j],
         [1j, 0],
     ])
-    return pauli_y_gate
+    return [pauli_y_gate,print_str]
 
 
 def get_pauli_z_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  Z  ┃",
+                 "┗━━━━━┛"]
     pauli_z_gate = np.array([
         [1, 0],
         [0, -1],
     ])
-    return pauli_z_gate
+    return [pauli_z_gate,print_str]
 
 
 def get_phase_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  P  ┃",
+                 "┗━━━━━┛"]
     phase_gate = np.array([
         [1, 0],
         [0, 1j],
     ])
-    return phase_gate
+    return [phase_gate,print_str]
 
 
 def get_t_gate():
+    print_str = ["┏━━━━━┓",
+                 "┃  T  ┃",
+                 "┗━━━━━┛"]
     t_gate = np.array([
         [1, 0],
         [0, pow(math.e, 1j * math.pi / 4)],
     ])
-    return t_gate
+    return [t_gate,print_str]
 
 #inner_gates:[inner_gates_0:gates_matrix,inner_gates_1:gates_matrix]
 def get_cnot_gate(is_inverse=False,inner_gates=[]):
@@ -95,6 +116,15 @@ def get_cnot_gate(is_inverse=False,inner_gates=[]):
     #    [0, 0, 0, 1],
     #    [0, 0, 1, 0],
     # ])
+    print_str = []
+    if is_inverse:
+        print_str += ["       ",
+                      "---⊕---",
+                      "   ┃   "]
+    else:
+        print_str += ["       ",
+                      "---●---",
+                      "   ┃   "]
     qubit_0 = qubits.get_basic_qubit_0()
     qubit_1 = qubits.get_basic_qubit_1()
     gate_matrix_list = []
@@ -102,17 +132,27 @@ def get_cnot_gate(is_inverse=False,inner_gates=[]):
 
     for i in range(inner_gates_num):
         if len(inner_gates)>i:
-            gate_matrix_list.append(inner_gates[i])
+            gate_matrix_list.append(inner_gates[i][0])
+            print_str += inner_gates[i][1]
         else:
             gate_matrix_list.append(1)
 
-    if not is_inverse:
-        cnot_gate = np.kron(np.kron(qubit_0, qubit_0.T), np.kron(gate_matrix_list[0],get_identity_gate())) + \
-                    np.kron(np.kron(qubit_1, qubit_1.T), np.kron(gate_matrix_list[0],get_pauli_x_gate()))
+    if is_inverse:
+        print_str += ["   ┃   ",
+                      "---●---",
+                      "       "]
     else:
-        cnot_gate = np.kron(np.kron(get_identity_gate(),gate_matrix_list[0]), np.kron(qubit_0, qubit_0.T)) + \
-                    np.kron(np.kron(get_pauli_x_gate(),gate_matrix_list[0]), np.kron(qubit_1, qubit_1.T))
-    return cnot_gate
+        print_str += ["   ┃   ",
+                      "---⊕---",
+                      "       "]
+
+    if not is_inverse:
+        cnot_gate = np.kron(np.kron(qubit_0, qubit_0.T), np.kron(gate_matrix_list[0],get_identity_gate()[0])) + \
+                    np.kron(np.kron(qubit_1, qubit_1.T), np.kron(gate_matrix_list[0],get_pauli_x_gate()[0]))
+    else:
+        cnot_gate = np.kron(np.kron(get_identity_gate()[0],gate_matrix_list[0]), np.kron(qubit_0, qubit_0.T)) + \
+                    np.kron(np.kron(get_pauli_x_gate()[0],gate_matrix_list[0]), np.kron(qubit_1, qubit_1.T))
+    return [cnot_gate,print_str]
 
 
 def get_cz_gate(is_inverse=False,inner_gates=[]):
@@ -135,12 +175,12 @@ def get_cz_gate(is_inverse=False,inner_gates=[]):
             gate_matrix_list.append(1)
 
     if not is_inverse:
-        cz_gate = np.kron(np.kron(qubit_0, qubit_0.T), np.kron(gate_matrix_list[0], get_identity_gate())) + \
-                  np.kron(np.kron(qubit_1, qubit_1.T), np.kron(gate_matrix_list[0], get_pauli_x_gate()))
+        cz_gate = np.kron(np.kron(qubit_0, qubit_0.T), np.kron(gate_matrix_list[0], get_identity_gate()[0])) + \
+                  np.kron(np.kron(qubit_1, qubit_1.T), np.kron(gate_matrix_list[0], get_pauli_x_gate()[0]))
     else:
-        cz_gate = np.kron(np.kron(get_identity_gate(), gate_matrix_list[0]), np.kron(qubit_0, qubit_0.T)) + \
-                  np.kron(np.kron(get_pauli_x_gate(), gate_matrix_list[0]), np.kron(qubit_1, qubit_1.T))
-    return cz_gate
+        cz_gate = np.kron(np.kron(get_identity_gate()[0], gate_matrix_list[0]), np.kron(qubit_0, qubit_0.T)) + \
+                  np.kron(np.kron(get_pauli_x_gate()[0], gate_matrix_list[0]), np.kron(qubit_1, qubit_1.T))
+    return [cz_gate,""]
 
 
 def get_ccnot_gate(is_inverse=False,inner_gates=[]):
@@ -166,13 +206,13 @@ def get_ccnot_gate(is_inverse=False,inner_gates=[]):
             gate_matrix_list.append(1)
 
     if not is_inverse:
-        ccnot_gate = np.kron(np.kron(np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[1])), get_identity_gate()) + \
-                     np.kron(np.kron(np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[1])), get_identity_gate()) + \
-                     np.kron(np.kron(np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[1])), get_identity_gate()) + \
-                     np.kron(np.kron(np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[1])), get_pauli_x_gate())
+        ccnot_gate = np.kron(np.kron(np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[1])), get_identity_gate()[0]) + \
+                     np.kron(np.kron(np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[1])), get_identity_gate()[0]) + \
+                     np.kron(np.kron(np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_0, qubit_0.T),gate_matrix_list[1])), get_identity_gate()[0]) + \
+                     np.kron(np.kron(np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[0]) , np.kron(np.kron(qubit_1, qubit_1.T),gate_matrix_list[1])), get_pauli_x_gate()[0])
     else:
-        ccnot_gate = np.kron(np.kron(np.kron(get_identity_gate(), gate_matrix_list[0]),np.kron(np.kron(qubit_0, qubit_0.T), gate_matrix_list[1])), np.kron(qubit_0, qubit_0.T)) + \
-                     np.kron(np.kron(np.kron(get_identity_gate(), gate_matrix_list[0]),np.kron(np.kron(qubit_1, qubit_1.T), gate_matrix_list[1])), np.kron(qubit_0, qubit_0.T)) + \
-                     np.kron(np.kron(np.kron(get_identity_gate(), gate_matrix_list[0]),np.kron(np.kron(qubit_0, qubit_0.T), gate_matrix_list[1])), np.kron(qubit_1, qubit_1.T)) + \
-                     np.kron(np.kron(np.kron(get_pauli_x_gate(), gate_matrix_list[0]),np.kron(np.kron(qubit_1, qubit_1.T), gate_matrix_list[1])), np.kron(qubit_1, qubit_1.T))
-    return ccnot_gate
+        ccnot_gate = np.kron(np.kron(np.kron(get_identity_gate()[0], gate_matrix_list[0]),np.kron(np.kron(qubit_0, qubit_0.T), gate_matrix_list[1])), np.kron(qubit_0, qubit_0.T)) + \
+                     np.kron(np.kron(np.kron(get_identity_gate()[0], gate_matrix_list[0]),np.kron(np.kron(qubit_1, qubit_1.T), gate_matrix_list[1])), np.kron(qubit_0, qubit_0.T)) + \
+                     np.kron(np.kron(np.kron(get_identity_gate()[0], gate_matrix_list[0]),np.kron(np.kron(qubit_0, qubit_0.T), gate_matrix_list[1])), np.kron(qubit_1, qubit_1.T)) + \
+                     np.kron(np.kron(np.kron(get_pauli_x_gate()[0], gate_matrix_list[0]),np.kron(np.kron(qubit_1, qubit_1.T), gate_matrix_list[1])), np.kron(qubit_1, qubit_1.T))
+    return [ccnot_gate,""]

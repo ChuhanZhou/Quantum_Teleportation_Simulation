@@ -12,8 +12,8 @@ class  Circuit():
             ex: [cnot,[contral_qubit_i,target_qubit_i]
         """
         self.gate_plan = gate_plan
-        self.blue_print, self.gate_list = self.create_blue_print(input_n,gate_plan)
-        self.circuit_matrix = self.create_circuit_matrix(self.blue_print, self.gate_list)
+        self.blue_print, self.gate_list,gate_str_list = self.create_blue_print(input_n,gate_plan)
+        self.circuit_matrix = self.create_circuit_matrix(self.blue_print, self.gate_list,gate_str_list)
 
     def run(self,qubit_matrix):
         if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
@@ -37,12 +37,20 @@ class  Circuit():
 
     def create_blue_print(self,input_n=0,gate_plan=[]):
         blue_print = np.ones((input_n, len(gate_plan))).astype(int) * -1
+        blue_print_str = []
+        for i in range(input_n):
+            blue_print_str+=["    ",
+                             " Q{} ".format(i),
+                             "    "]
         gate_list = []
+        gate_str_list = []
         step = 0
         for g_name, g_indexs in gate_plan:
             # single_qubit_gate
             if len(g_indexs) == 1:
-                gate_list.append(gates.get_gate_by_name(g_name))
+                gate,print_str = gates.get_gate_by_name(g_name)
+                gate_list.append(gate)
+                gate_str_list.append(print_str)
                 if blue_print[g_indexs[0], step] != -1:
                     step += 1
                 blue_print[g_indexs[0], step] = len(gate_list) - 1
@@ -54,21 +62,23 @@ class  Circuit():
                     inner_gates = []
                     for g_i in range(len(g_indexs) - 1):
                         i_gate_num = abs(g_indexs[g_i] - g_indexs[g_i + 1]) - 1
-                        inner_gate = 1
+                        inner_gate = [1,[]]
                         if i_gate_num > 0:
                             for i in range(i_gate_num):
-                                inner_gate = np.kron(inner_gate, gates.get_identity_gate())
+                                inner_gate = np.kron(inner_gate, gates.get_identity_gate()[0])
                             inner_gates.append(inner_gate)
                         else:
                             inner_gates.append(inner_gate)
-                    gate_list.append(gates.get_gate_by_name(g_name, is_inverse, inner_gates))
+                    gate, print_str = gates.get_gate_by_name(g_name, is_inverse, inner_gates)
+                    gate_list.append(gate)
+                    gate_str_list.append(print_str)
                     if blue_print[min(g_indexs):max(g_indexs) + 1, step].max() != -1:
                         step += 1
                     blue_print[min(g_indexs):max(g_indexs) + 1, step] = len(gate_list) - 1
         blue_print = blue_print[:,0:step+1]
-        return blue_print,gate_list
+        return blue_print,gate_list,gate_str_list
 
-    def create_circuit_matrix(self,blue_print=np.zeros((0, 0)), gate_list=[]):
+    def create_circuit_matrix(self,blue_print=np.zeros((0, 0)), gate_list=[],gate_str_list=[]):
         circuit_matrix = 1
 
         for step_i in range(blue_print.shape[1]):
@@ -81,7 +91,7 @@ class  Circuit():
                         gate = gate_list[gate_i]
                         gate_i_old = gate_i
                 elif gate_i == -1:
-                    gate = gates.get_identity_gate()
+                    gate = gates.get_identity_gate()[0]
                 step_matrix = np.kron(step_matrix,gate)
             circuit_matrix = np.dot(step_matrix,circuit_matrix)
         return circuit_matrix

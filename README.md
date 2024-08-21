@@ -4,7 +4,7 @@
    
 - [X] 2. Teleportation based on density matrix of qubit
 
-- [X] 2. The influence of noise(like Dephasing) `Visualisation`
+- [X] 2. The influence of noise(like Dephasing) `visualization`
 
 ## Install
 ### Clone git

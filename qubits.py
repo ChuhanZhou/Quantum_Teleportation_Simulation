@@ -149,7 +149,7 @@ def measurement_density_matrix(density_matrix,measurement_list=[]):
     result = random.choices(options, probabilities)[0]
 
     # get density matrix for qubits which is not measured
-    gate_i = gates.get_gate_by_name("I")
+    gate_i = gates.get_gate_by_name("I")[0]
     qubit_m = 1
     m_i=0
     for i in range(0, qubit_num):
