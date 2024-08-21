@@ -31,7 +31,7 @@ def unitary_operation(qubit_matrix,qubit_a_i=0,state="00",bell_state_o="00"):
     elif state+bell_state_o in [encode["Φ+"]+encode["Ψ+"],encode["Ψ+"]+encode["Φ+"],encode["Φ-"]+encode["Ψ-"],encode["Ψ-"]+encode["Φ-"]]:
         plan = [["X", [qubit_a_i]]]
     elif state+bell_state_o in [encode["Φ+"]+encode["Ψ-"],encode["Ψ-"]+encode["Φ+"],encode["Φ-"]+encode["Ψ+"],encode["Ψ+"]+encode["Φ-"]]:
-        plan = [["Z", [qubit_a_i]],["X", [qubit_a_i]]]
+        plan = [["X", [qubit_a_i]],["Z", [qubit_a_i]]]
     return circuits.Circuit(qubit_n, plan).run(qubit_matrix)
 
 def teleportation(qubit_c=qubits.get_qubit_matrix([0]),state_ab="00",noise_para=[0.0,0.0]):

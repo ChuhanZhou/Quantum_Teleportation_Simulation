@@ -93,10 +93,10 @@ def measurement_state_vector(qubit_matrix,measurement_list=[]):
         part_vector = qubit_matrix[o_i, 0]
         if decode_measure in options_probabilities.keys():
             matrix_part_vector.get(decode_measure).update({decode_other: part_vector})
-            options_probabilities.update({decode_measure: options_probabilities.get(decode_measure) + abs(part_vector)})
+            options_probabilities.update({decode_measure: options_probabilities.get(decode_measure) + abs(part_vector)**2})
         else:
             matrix_part_vector.update({decode_measure: {decode_other: part_vector}})
-            options_probabilities.update({decode_measure:abs(part_vector)})
+            options_probabilities.update({decode_measure:abs(part_vector)**2})
     options = list(options_probabilities.keys())
     probabilities = list(options_probabilities.values())
     result = random.choices(options, probabilities)[0]

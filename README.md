@@ -1,7 +1,11 @@
 # Quantum_Teleportation_Simulation
 
-- [x] 1. Teleportation based on pure state qubit
+- [x] 1. Teleportation based on state vector of qubit
    
-- [ ] 2. Teleportation based on Continuous Variables
+- [X] 2. Teleportation based on density matrix of qubit
 
-- [ ] 3. The influence of noise(like Dephasing) `Visualisation`
+- [X] 2. The influence of noise(like Dephasing) `Visualisation`
+
+##Deployment Environment
+
+##Demo
