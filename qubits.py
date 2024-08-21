@@ -8,18 +8,22 @@ from scipy.linalg import sqrtm
 
 
 def get_basic(type=0):
-    if type==0:
+    if type == 0.:
         return get_basic_qubit_0()
     return get_basic_qubit_1()
 
 def get_qubit_matrix(input_list=[]):
-    """
+    '''
     input_list : [q0,q1,q2,...,qn]
         ex : [0,1,1,0,1]
-    """
+        ex : [0,[α,β],1,[α,β],1]
+    '''
     qubit_matrix = 1
     for q_type in input_list:
-        qubit = get_basic(int(q_type))
+        if str(q_type) in ["0","0.0","1","1.0"]:
+            qubit = get_basic(int(q_type))
+        else:
+            qubit = get_qubit(float(q_type[0]),float(q_type[0]))
         qubit_matrix = np.kron(qubit_matrix, qubit)
     return qubit_matrix
 
@@ -29,11 +33,17 @@ def to_muti_qubit_matrix(qubit_list=[]):
         muti_qubit_matrix = np.kron(muti_qubit_matrix, q_matrix)
     return muti_qubit_matrix
 
+def get_qubit(alpha=0.6,beta = 0.8):
+    '''
+    |ψ> = α|0> + β|1>
+    '''
+    return normalize_state_vector(np.array([[alpha], [beta]]))
+
 def get_basic_qubit_0():# ∣0⟩
-    return np.array([[1.], [0.]])
+    return get_qubit(1.,0.)
 
 def get_basic_qubit_1():# ∣1⟩
-    return np.array([[0.], [1.]])
+    return get_qubit(0.,1.)
 
 def get_fidelity(qubit_0,qubit_1):
     if qubit_0.shape[0] == qubit_0.shape[1] and qubit_0.shape[0] > 1:
@@ -51,9 +61,9 @@ def get_density_matrix_fidelity(qubit_0,qubit_1):
     return f
 
 def normalization(qubit_matrix):
-    """
+    '''
     normalization=> <ψ|ψ>=1
-    """
+    '''
     if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
         return normalize_density_matrix(qubit_matrix)
     else:
@@ -156,30 +166,3 @@ def measurement_density_matrix(density_matrix,measurement_list=[]):
 def get_density_matrix(qubit_matrix):
     rho = np.dot(qubit_matrix, qubit_matrix.T)
     return rho
-
-def slice_density_matrix(density_matrix,keep=[]):
-    qubit_num = int(math.log2(density_matrix.shape[0]))
-    density_matrix = density_matrix.reshape((np.ones((qubit_num*2)) * 2).astype("int").tolist())
-
-    part_density_matrix = density_matrix
-    qubit_n = qubit_num
-    for p_i in sorted(set(range(qubit_num)) - set(keep), reverse=True):
-        part_density_matrix = np.trace(part_density_matrix, axis1=p_i, axis2=p_i + qubit_n)
-    part_density_matrix = part_density_matrix.reshape((2**len(keep),2**len(keep)))
-    part_density_matrix = normalization(part_density_matrix)
-    return part_density_matrix
-
-def decode_qubits(qubits = np.array([])):
-    qubit_num = int(math.log2(qubits.shape[0]))
-    qubit_list = []
-    one_i_list = np.nonzero(qubits)[0]
-    for i in one_i_list:
-        product_group = []
-        for qubit_i in range(qubit_num):
-            q = np.zeros((2, 1))
-
-            qubit_matrix_i = int(i%2**(qubit_num-qubit_i)>=2**(qubit_num-qubit_i)/2)
-            q[qubit_matrix_i,0]=1
-            product_group.append(q)
-        qubit_list.append(product_group)
-    return qubit_list

@@ -1,4 +1,4 @@
-# Quantum_Teleportation_Simulation
+# Quantum Teleportation Simulation
 
 - [x] 1. Teleportation based on state vector of qubit
    
@@ -11,7 +11,7 @@
 ```
 git clone https://github.com/ChuhanZhou/Quantum_Teleportation_Simulation.git
 ```
-### Deployment virtual environment
+### Deploy virtual environment
 ```
 #environment name: env_SCIQIS_test
 conda env create -f environment.yml
