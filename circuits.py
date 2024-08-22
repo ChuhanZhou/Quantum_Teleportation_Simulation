@@ -1,19 +1,25 @@
 import numpy as np
-import gates
-import qubits
+from multiprocessing import Manager,Process
 from matplotlib import pyplot as plt
 import datetime
-from multiprocessing import Manager,Process
+
+import gates
+import qubits
 
 class  Circuit():
-    def __init__(self,input_n=0,gate_plan = []):
+    def __init__(self,input_n=0,gate_plan = [],id_list = list(range(0))):
         """
         gate_plan: [[gate_name,[gate_index_0,...]],...]
-            ex: [cnot,[contral_qubit_i,target_qubit_i]
+            ex: ["CNOT",[contral_qubit_i,target_qubit_i]],
+                ["CCNOT",[contral_qubit_i,contral_qubit_i,target_qubit_i]],
+                ["measurement",[start_qubit_i,end_qubit_i]]
         """
+        self.id_list = id_list
+        if len(self.id_list) < input_n:
+            self.id_list+=list(range(input_n-len(self.id_list)))
         self.gate_plan = gate_plan
         self.blue_print, self.gate_list,gate_str_list = self.create_blue_print(input_n,gate_plan)
-        self.circuit_matrix = self.create_circuit_matrix(self.blue_print, self.gate_list,gate_str_list)
+        self.circuit_matrix,self.circuit_str = self.create_circuit_matrix(self.blue_print, self.gate_list,gate_str_list)
 
     def run(self,qubit_matrix):
         if qubit_matrix.shape[0] == qubit_matrix.shape[1] and qubit_matrix.shape[0] > 1:
@@ -37,11 +43,7 @@ class  Circuit():
 
     def create_blue_print(self,input_n=0,gate_plan=[]):
         blue_print = np.ones((input_n, len(gate_plan))).astype(int) * -1
-        blue_print_str = []
-        for i in range(input_n):
-            blue_print_str+=["    ",
-                             " Q{} ".format(i),
-                             "    "]
+
         gate_list = []
         gate_str_list = []
         step = 0
@@ -58,17 +60,22 @@ class  Circuit():
             elif len(g_indexs) > 1:
                 if g_indexs[0] != g_indexs[-1]:
                     is_inverse = g_indexs[0] > g_indexs[-1]
-                    g_indexs.sort(reverse=is_inverse)
+                    g_indexs.sort()
                     inner_gates = []
                     for g_i in range(len(g_indexs) - 1):
                         i_gate_num = abs(g_indexs[g_i] - g_indexs[g_i + 1]) - 1
-                        inner_gate = [1,[]]
+                        inner_gate = np.array([[1]])
+                        inner_print = []
                         if i_gate_num > 0:
                             for i in range(i_gate_num):
-                                inner_gate = np.kron(inner_gate, gates.get_identity_gate()[0])
-                            inner_gates.append(inner_gate)
+                                print_str = ["   ┃   ",
+                                             "---┃---",
+                                             "   ┃   "]
+                                inner_gate = np.kron(inner_gate,gates.get_identity_gate()[0])
+                                inner_print+=print_str
+                            inner_gates.append([inner_gate,inner_print])
                         else:
-                            inner_gates.append(inner_gate)
+                            inner_gates.append([inner_gate,inner_print])
                     gate, print_str = gates.get_gate_by_name(g_name, is_inverse, inner_gates)
                     gate_list.append(gate)
                     gate_str_list.append(print_str)
@@ -80,21 +87,59 @@ class  Circuit():
 
     def create_circuit_matrix(self,blue_print=np.zeros((0, 0)), gate_list=[],gate_str_list=[]):
         circuit_matrix = 1
+        circuit_str = []
+        for i in range(blue_print.shape[0]*3):
+            circuit_str.append("")
 
         for step_i in range(blue_print.shape[1]):
             step_matrix = 1
             gate_i_old = -1
+            step_str = []
             for gate_i in blue_print[:,step_i:step_i+1].T[0]:
                 gate = 1
-                if gate_i >= 0:
-                    if gate_i != gate_i_old:
+                gate_str = []
+                if gate_i >= 0:#has gate
+                    if gate_i != gate_i_old:#is new gate
                         gate = gate_list[gate_i]
+                        gate_str+=gate_str_list[gate_i]
                         gate_i_old = gate_i
-                elif gate_i == -1:
+                elif gate_i == -1:#no gate
                     gate = gates.get_identity_gate()[0]
+                    gate_str+=["       ",
+                               "-------",
+                               "       "]
                 step_matrix = np.kron(step_matrix,gate)
+                step_str+=gate_str
             circuit_matrix = np.dot(step_matrix,circuit_matrix)
-        return circuit_matrix
+
+            for line_i in range(len(circuit_str)):
+                step_to_step_str = "  "
+                if line_i % 3 == 1:#middle of each line of circuit
+                    step_to_step_str = "--"
+
+                circuit_str[line_i] += step_to_step_str + step_str[line_i] + step_to_step_str
+        return circuit_matrix,circuit_str
+
+    def get_print(self):
+        circuit_print_str = ""
+        circuit_print_list = []
+        input_str = []
+
+        max_length = 0
+        for i in range(len(self.id_list)):
+            max_length=max(max_length,len(str(self.id_list[i]))+4)
+        empty_str = ""
+        for i in range(max_length):
+            empty_str += " "
+
+        for i in range(len(self.id_list)):
+            input_str+=[empty_str,
+                        " Q{}:{} ".format(str(self.id_list[i]),empty_str[0:max_length-4-len(str(self.id_list[i]))]),
+                        empty_str]
+        for i in range(len(input_str)):
+            circuit_print_str += input_str[i]+self.circuit_str[i]+"\n"
+            circuit_print_list.append(input_str[i]+self.circuit_str[i])
+        return circuit_print_str,circuit_print_list
 
 def get_random_circuit(input_n=3,gate_n=10):
     gate_plan = []
@@ -235,4 +280,3 @@ def show_p_haar_f(input_n = 1, main_info = None):
         lines = line_0+line_1
         labels = label_0 + label_1
         ax_0.legend(lines,labels)
-

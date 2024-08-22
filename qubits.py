@@ -1,10 +1,10 @@
 import math
 import random
 import numpy as np
+from scipy.linalg import sqrtm
 
 import gates
 import qubits
-from scipy.linalg import sqrtm
 
 
 def get_basic(type=0):

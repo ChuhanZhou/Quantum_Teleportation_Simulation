@@ -1,4 +1,5 @@
 import math
+
 import circuits
 import qubits
 
@@ -21,6 +22,6 @@ def dephasing_noise(density_matrix, gamma=0.0, z=0.0):
     #   z = 0, ρ'z => I
     #   z = 1, ρ'z => 0
     # ρ'x => 0
-    out = (1 - gamma) * rho + gamma * qubits.normalization(I * (z*rho+(1-z)*I))
+    out = (1 - gamma) * rho + gamma * qubits.normalization(I * (z * rho + (1 - z) * I))
     out = qubits.normalization(out)
     return out

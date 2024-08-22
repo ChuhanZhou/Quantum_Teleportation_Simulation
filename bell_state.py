@@ -1,6 +1,7 @@
+import math
+
 import qubits
 import circuits
-import math
 import noises
 
 def entangler(qubit_matrix,qubit_a_i=0,qubit_b_i=1):
