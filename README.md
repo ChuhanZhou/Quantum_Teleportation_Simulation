@@ -45,3 +45,10 @@ python -m ipykernel install --user --name=env_SCIQIS_test
 ipython kernelspec list
 ```
 ### Open [demo.ipynb](/demo.ipynb) in Jupyter Lab, Jupyter Notebook or IDE
+
+> [!WARNING]
+> If your CPU is not powerful enough or you want save the test time, please change these settings in code box 9:
+> ```
+> thread_number = 8
+> max_index = 3
+> ```  
